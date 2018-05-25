@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from hashlib import md5
+# from hashlib import md5
 from io import BytesIO
 from PIL import (
     Image, ImageDraw, ImageFont, ImageFilter
@@ -13,6 +13,16 @@ from config import (
 )
 
 logger = logging.getLogger(__file__)
+
+Weekday = [
+    '星期一',
+    '星期二',
+    '星期三',
+    '星期四',
+    '星期五',
+    '星期六',
+    '星期日',
+]
 
 
 # resize image
@@ -49,9 +59,12 @@ def _get_footer():
 class RenderText(object):
 
     def __init__(self, **kwargs):
+        _timestamp = kwargs.pop('timestamp')
+        assert _timestamp is not None, "need timestamp"
+
         self.title = kwargs.pop('title')
         self.content = kwargs.pop('content')
-        self.timestamp = kwargs.pop('timestamp')
+        self.datetime = datetime.fromtimestamp(_timestamp)
         self.point = '快讯'
 
         self.fnt_title = ImageFont.truetype(get_font_bold(), get_render_text_setting('font_title_size'))
@@ -73,13 +86,16 @@ class RenderText(object):
 
     @property
     def image_height(self):
+        header_h = self._get_img_h(self.header)
         footer_h = self._get_img_h(self.footer)
-        elh = get_render_text_setting('element_line_height') * 3
+        elh = get_render_text_setting('element_line_height') * 5
         fpmt = get_render_text_setting('font_point_margin_top')
         fcmt = get_render_text_setting('font_content_margin_top')
-        _r = self._get_img_title_height() + self._get_img_content_height()
+        ftmt = get_render_text_setting('font_title_margin_top')
+        fdmt = get_render_text_setting('font_date_margin_top')
+        _r = header_h + self._get_img_title_height() + self._get_img_content_height()
         _r += footer_h + elh
-        _r -= fpmt + fcmt
+        _r -= fpmt + ftmt + fcmt + fdmt
         return _r
 
     @property
@@ -88,10 +104,7 @@ class RenderText(object):
 
     @property
     def date_string(self):
-        assert type(self.timestamp) is int, "timestamp must be int"
-        return datetime.fromtimestamp(
-            self.timestamp
-        ).strftime('%Y-%m-%d %H:%M')
+        return self.datetime.strftime('%Y-%m-%d %H:%M')
 
     @property
     def title_lines(self):
@@ -143,6 +156,8 @@ class RenderText(object):
             lines.append(text[s:i + 1])
         return lines
 
+    # def _get_weekday_name(self, index):
+
     def draw_image(self):
 
         new_img = Image.new('RGB', (self.image_width, self.image_height), (255, 255, 255))
@@ -150,8 +165,59 @@ class RenderText(object):
         draw = ImageDraw.Draw(new_img)
         new_img.paste(self.background, (0, 0))
 
+        # draw header
         new_img.paste(self.header, (0, 0))
+        x, y = 585, 70  # define month pos
+        # print(self.datetime.month)
+        month_string = "- {:02d} -".format(self.datetime.month)
+        draw.text((x, y), month_string, font=self.fnt_month, fill=(255, 255, 255))
 
+        # cal day pos
+        w, h = self.fnt_month.getsize("{}".format(self.datetime.month))
+        x = 580
+        y += h - 12
+        # print (x, y)
+        day_string = "{:02d}".format(self.datetime.day)
+        draw.text((x, y), day_string, font=self.fnt_day, fill=(255, 255, 255))
+
+        # cal week pos
+        w, h = self.fnt_day.getsize(day_string)
+        y += h + 5
+        weekday_string = Weekday[self.datetime.weekday()]
+        draw.text((x, y), weekday_string, font=self.fnt_week, fill=(255, 255, 255))
+
+        # cal point pos
+        x = get_render_text_setting('content_margin')
+        header_h = self._get_img_h(self.header)
+        elh = get_render_text_setting('element_line_height')
+        y = header_h + elh
+        draw.text((x, y), self.point, font=self.fnt_point, fill=(0x00, 0x56, 0xff))
+
+        # cal title pos
+        fpmt = get_render_text_setting('font_point_margin_top')
+        w, h = self.fnt_point.getsize(self.point)
+        y += h + elh + fpmt
+
+        for row in self.title_lines:
+            draw.text((x, y), row, font=self.fnt_title, fill=(0x3b, 0x3b, 0x3b))
+            y += self.title_line_height
+
+        y += self.title_line_height - elh - fpmt
+        draw.text((x, y), self.date_string, font=self.fnt_date, fill=(0x87, 0x87, 0x87))
+
+        # cal content pos
+        fdmt = get_render_text_setting('font_date_margin_top')
+        w, h = self.fnt_date.getsize(self.date_string)
+        y += h + elh - fdmt
+        for row in self.content_lines:
+            draw.text((x, y), row, font=self.fnt_content, fill=(0x54, 0x54, 0x54))
+            y += self.content_list_height
+
+        # cal footer
+        fcmt = get_render_text_setting('font_content_margin_top')
+        x = 0
+        y += elh - self.content_list_height - fcmt
+        new_img.paste(self.footer, (x, y))
 
         return new_img
 
@@ -166,10 +232,10 @@ if __name__ == "__main__":
 
     r = RenderText(**detailData)
 
-    print (r.title_lines)
-    print (r.title_line_height)
-
-    print (r.content_lines)
-    print (r.content_list_height)
+    # print (r.title_lines)
+    # print (r.title_line_height)
+    #
+    # print (r.content_lines)
+    # print (r.content_list_height)
     # print (r.image_width, r.image_height)
     r.draw_image().show()
