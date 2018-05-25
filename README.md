@@ -5,3 +5,11 @@
 [![GitHub issues](https://img.shields.io/github/issues/Bit03/django-text2img.svg)](https://github.com/Bit03/django-text2img/issues)
 [![GitHub forks](https://img.shields.io/github/forks/Bit03/django-text2img.svg)](https://github.com/Bit03/django-text2img/network)
 [![GitHub stars](https://img.shields.io/github/stars/Bit03/django-text2img.svg)](https://github.com/Bit03/django-text2img/stargazers)
+
+
+
+## 安装
+
+```.bash
+pip install setup.py
+```
