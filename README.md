@@ -13,3 +13,18 @@
 ```.bash
 pip install setup.py
 ```
+
+
+## 配置
+在 django settings 中增加 一下配置
+```.python
+RENDER_TEXT = {
+    'font': 'NotoSansCJKsc',
+    'font_ext': 'otf',
+    'font_path': os.path.join(BASE_DIR, './fonts/'),
+
+    'header': os.path.join(BASE_DIR, './source/daily-news-header.png'),
+    'content': os.path.join(BASE_DIR, './source/daily-news-content.png'),
+    'footer': os.path.join(BASE_DIR, './source/daily-news-footer.png'),
+}
+```
