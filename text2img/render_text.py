@@ -130,7 +130,7 @@ class RenderText(object):
         )
 
     @property
-    def content_list_height(self):
+    def content_line_height(self):
         w, h = self.fnt_content.getsize(self.content)
         return h + get_render_text_setting('content_line_height')
 
@@ -143,7 +143,9 @@ class RenderText(object):
 
     def _get_img_content_height(self):
         clh = get_render_text_setting('content_line_height')
-        return self.content_list_height * len(self.content_lines) - clh
+        _ch = self.content_line_height * len(self.content_lines) - clh
+        logger.info("------- content {h} height ----------".format(h=_ch))
+        return _ch
 
     def _split_line(self, font, text, width):
         s = 0
@@ -157,7 +159,6 @@ class RenderText(object):
         return lines
 
     # def _get_weekday_name(self, index):
-
     def draw_image(self):
 
         new_img = Image.new('RGB', (self.image_width, self.image_height), (255, 255, 255))
@@ -211,18 +212,21 @@ class RenderText(object):
         y += h + elh - fdmt
         for row in self.content_lines:
             draw.text((x, y), row, font=self.fnt_content, fill=(0x54, 0x54, 0x54))
-            y += self.content_list_height
+            y += self.content_line_height
 
-        # cal footer
+        # cal footer pos
         fcmt = get_render_text_setting('font_content_margin_top')
         x = 0
-        y += elh - self.content_list_height - fcmt
+        y += elh - self.content_line_height - fcmt
+        # y += elh
+        logger.info("---------- footer ({x}, {y}) --------------".format(x=x, y=y))
         new_img.paste(self.footer, (x, y))
 
         return new_img
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level='INFO')
     detailData = {
         'timestamp': 1526616756,
         'title': '《华尔街日报》调查显示约 19% ICO 存在「误导甚至欺诈」',
@@ -231,11 +235,4 @@ if __name__ == "__main__":
     }
 
     r = RenderText(**detailData)
-
-    # print (r.title_lines)
-    # print (r.title_line_height)
-    #
-    # print (r.content_lines)
-    # print (r.content_list_height)
-    # print (r.image_width, r.image_height)
     r.draw_image().show()

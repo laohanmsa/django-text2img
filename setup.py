@@ -3,7 +3,7 @@ import text2img
 
 install_requires = [
                        'Django >= 1.11',
-                       'Pillow >= 5.1',
+                       'Pillow >= 5.0',
                    ],
 
 setup(
