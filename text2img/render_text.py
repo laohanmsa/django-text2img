@@ -6,7 +6,7 @@ from PIL import (
     Image, ImageDraw, ImageFont, ImageFilter
 )
 
-from config import (
+from .config import (
     get_render_text_setting,
     get_font_bold, get_font_medium, get_font_regular,
     get_header, get_content, get_footer
@@ -161,7 +161,10 @@ class RenderText(object):
     # def _get_weekday_name(self, index):
     def draw_image(self):
 
+        logger.info("------- create new image ------------")
         new_img = Image.new('RGB', (self.image_width, self.image_height), (255, 255, 255))
+        logger.info("------- new image is created (w, h) ------------".format(w=self.image_width,
+                                                                              h=self.image_height))
 
         draw = ImageDraw.Draw(new_img)
         new_img.paste(self.background, (0, 0))
@@ -215,13 +218,21 @@ class RenderText(object):
             y += self.content_line_height
 
         # cal footer pos
-        fcmt = get_render_text_setting('font_content_margin_top')
+        # fcmt = get_render_text_setting('font_content_margin_top')
         x = 0
-        y += elh - self.content_line_height - fcmt
+        # y += elh - self.content_line_height - fcmt
+        y = self.image_height - self._get_img_h(self.footer)
         logger.info("---------- footer ({x}, {y}) --------------".format(x=x, y=y))
         new_img.paste(self.footer, (x, y))
 
         return new_img
+
+    def draw_image_output(self):
+        _img = self.draw_image()
+        _image_fp = BytesIO()
+        _img.save(_image_fp, format='JPEG', quality=100)
+        _img.close()
+        return _image_fp.getvalue()
 
 
 if __name__ == "__main__":
@@ -234,4 +245,4 @@ if __name__ == "__main__":
     }
 
     r = RenderText(**detailData)
-    r.draw_image().show()
+    print (r.draw_image_output())

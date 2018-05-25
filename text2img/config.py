@@ -1,6 +1,6 @@
 import os
 
-# from django.conf import settings
+from django.conf import settings
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -59,7 +59,7 @@ RENDER_TEXT_DEFAULTS = {
 RENDER_TEXT = RENDER_TEXT_DEFAULTS.copy()
 
 
-# RENDER_TEXT.update(getattr(settings, 'RENDER_TEXT', {}))
+RENDER_TEXT.update(getattr(settings, 'RENDER_TEXT', {}))
 
 
 def get_render_text_setting(setting, default=None):
