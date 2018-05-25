@@ -11,7 +11,7 @@
 ## 安装
 
 ```.bash
-pip install setup.py
+python setup.py install
 ```
 
 
