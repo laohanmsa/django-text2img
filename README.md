@@ -21,10 +21,10 @@ python setup.py install
 RENDER_TEXT = {
     'font': 'NotoSansCJKsc',
     'font_ext': 'otf',
-    'font_path': os.path.join(BASE_DIR, './fonts/'),
+    'font_path': os.path.join(BASE_DIR, '../fonts/'),
 
-    'header': os.path.join(BASE_DIR, './source/daily-news-header.png'),
-    'content': os.path.join(BASE_DIR, './source/daily-news-content.png'),
-    'footer': os.path.join(BASE_DIR, './source/daily-news-footer.png'),
+    'header': os.path.join(BASE_DIR, '../source/daily-news-header.png'),
+    'content': os.path.join(BASE_DIR, '../source/daily-news-content.png'),
+    'footer': os.path.join(BASE_DIR, '../source/daily-news-footer.png'),
 }
 ```
