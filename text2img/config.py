@@ -6,7 +6,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # 配置项
 TOTAL_WIDTH = 720  # 总宽度
-CONTENT_MARGIN = int(TOTAL_WIDTH * 0.12)  # 内容区左右留白总宽度百分之11
+CONTENT_MARGIN = int(TOTAL_WIDTH * 0.11)  # 内容区左右留白总宽度百分之11
 CONTENT_WIDTH = TOTAL_WIDTH - CONTENT_MARGIN * 2  # 内容区宽度
 TITLE_LINE_HEIGHT = 15  # 标题行高
 CONTENT_LINE_HEIGHT = 10  # 内容行高
