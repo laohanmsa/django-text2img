@@ -220,7 +220,7 @@ class RenderText(object):
         # cal footer pos
         # fcmt = get_render_text_setting('font_content_margin_top')
         x = 0
-        # y += elh - self.content_line_height - fcmt
+        y += elh - self.content_line_height
         y = self.image_height - self._get_img_h(self.footer)
         logger.info("---------- footer ({x}, {y}) --------------".format(x=x, y=y))
         new_img.paste(self.footer, (x, y))
