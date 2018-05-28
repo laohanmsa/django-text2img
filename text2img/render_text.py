@@ -150,7 +150,7 @@ class RenderText(object):
     def _split_line(self, font, text, width):
         s = 0
         lines = []
-        for i in range(len(text)):
+        for i in range(len(text) + 1):
             if font.getsize(text[s:i])[0] > width:
                 lines.append(text[s:i - 1])
                 s = i - 1
