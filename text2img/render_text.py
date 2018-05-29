@@ -148,15 +148,26 @@ class RenderText(object):
         return _ch
 
     def _split_line(self, font, text, width):
+        suffix = ["，", ",", "。", ".", "！", "!", "？", "?", "；", "", "：", ":", "”", "’", "』", "」", "）", ")", "》", ">"]
+        prefix = ["（", "(", "『", "「", "“", "‘"]
         s = 0
         lines = []
-        for i in range(len(text)):
+        for i in range(len(text) + 1):
             if font.getsize(text[s:i])[0] > width:
-                lines.append(text[s:i - 1])
-                s = i - 1
+                # 处理行尾字符是否是允许字符
+                if (text[i - 1:i] in suffix):
+                    lines.append(text[s:i])
+                    s = i
+                elif (text[i - 2:i - 1] in prefix):
+                    lines.append(text[s:i - 2])
+                    s = i - 2
+                else:
+                    lines.append(text[s:i - 1])
+                    s = i - 1
         if i > s:
             lines.append(text[s:i + 1])
         return lines
+
 
     # def _get_weekday_name(self, index):
     def draw_image(self):
@@ -220,7 +231,7 @@ class RenderText(object):
         # cal footer pos
         # fcmt = get_render_text_setting('font_content_margin_top')
         x = 0
-        # y += elh - self.content_line_height - fcmt
+        y += elh - self.content_line_height
         y = self.image_height - self._get_img_h(self.footer)
         logger.info("---------- footer ({x}, {y}) --------------".format(x=x, y=y))
         new_img.paste(self.footer, (x, y))
@@ -245,4 +256,4 @@ if __name__ == "__main__":
     }
 
     r = RenderText(**detailData)
-    print (r.draw_image_output())
+    print(r.draw_image_output())
