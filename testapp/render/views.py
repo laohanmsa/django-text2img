@@ -15,9 +15,7 @@ class RenderTextView(View):
 
     def post(self, request, *args, **kwargs):
         json_data = json.loads(request.body)
-        print (json_data)
         r = RenderText(**json_data)
-
         return HttpResponse(content=r.draw_image_output(), content_type='image/jpeg')
 
     @csrf_exempt
