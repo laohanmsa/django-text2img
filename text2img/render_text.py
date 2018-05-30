@@ -5,7 +5,7 @@ from io import BytesIO
 from PIL import (
     Image, ImageDraw, ImageFont, ImageFilter
 )
-
+import re
 from .config import (
     get_render_text_setting,
     get_font_bold, get_font_medium, get_font_regular,
@@ -148,26 +148,38 @@ class RenderText(object):
         return _ch
 
     def _split_line(self, font, text, width):
-        suffix = ["，", ",", "。", ".", "！", "!", "？", "?", "；", "", "：", ":", "”", "’", "』", "」", "）", ")", "》", ">"]
-        prefix = ["（", "(", "『", "「", "“", "‘"]
-        s = 0
-        lines = []
-        for i in range(len(text) + 1):
-            if font.getsize(text[s:i])[0] > width:
-                # 处理行尾字符是否是允许字符
-                if (text[i - 1:i] in suffix):
-                    lines.append(text[s:i])
-                    s = i
-                elif (text[i - 2:i - 1] in prefix):
-                    lines.append(text[s:i - 2])
-                    s = i - 2
-                else:
-                    lines.append(text[s:i - 1])
-                    s = i - 1
-        if i > s:
-            lines.append(text[s:i + 1])
+        suffix = ["，", ",", "。", ".", "！", "!", "？", "?", "；", ";", "：", ":", "”", "’", "』", "」", "）", ")", "》", ">"
+            , "、", "%"]
+        prefix = ["（", "(", "『", "「", "“", "‘", "《", "<"]
+        line = ''
+        lines = [];
+        textArray = text.split(' ')
+        pattern = r'^[a-zA-Z\'‘’\"“”\.\,，]{2,}$'
+        for _text in textArray:
+            if (re.match(pattern, _text)):
+                line += _text
+                if font.getsize(line)[0] > width:
+                    lines.append(line[:-len(_text)].strip())
+                    line = _text
+                pass
+            else:
+                for i in range(len(_text) + 1):
+                    line += _text[i - 1:i];
+                    if font.getsize(line)[0] > width:
+                        # 处理行尾字符是否是允许字符
+                        if (_text[i - 1:i] in suffix):
+                            lines.append(line.strip())
+                            line = ''
+                        elif (text[i - 2:i - 1] in prefix):
+                            lines.append(line[:len(line) - 2].strip())
+                            line = line[len(line) - 2:]
+                        else:
+                            lines.append(line[:len(line) - 1].strip())
+                            line = line[len(line) - 1:]
+            line += ' '
+        if line.strip() != '':
+            lines.append(line.strip())
         return lines
-
 
     # def _get_weekday_name(self, index):
     def draw_image(self):
@@ -211,13 +223,14 @@ class RenderText(object):
         # cal title pos
         fpmt = get_render_text_setting('font_point_margin_top')
         w, h = self.fnt_point.getsize(self.point)
-        y += h + elh + fpmt
+        y += h + elh - fpmt
 
         for row in self.title_lines:
             draw.text((x, y), row, font=self.fnt_title, fill=(0x3b, 0x3b, 0x3b))
             y += self.title_line_height
 
-        y += self.title_line_height - elh - fpmt
+        ftmt = get_render_text_setting('font_title_margin_top')
+        y += self.title_line_height - elh - ftmt
         draw.text((x, y), self.date_string, font=self.fnt_date, fill=(0x87, 0x87, 0x87))
 
         # cal content pos
@@ -229,13 +242,14 @@ class RenderText(object):
             y += self.content_line_height
 
         # cal footer pos
-        # fcmt = get_render_text_setting('font_content_margin_top')
+        fcmt = get_render_text_setting('font_content_margin_top')
         x = 0
-        y += elh - self.content_line_height
-        y = self.image_height - self._get_img_h(self.footer)
+        # y += elh - self.content_line_height
+        clh = get_render_text_setting('content_line_height')
+        y += elh - clh
+        # y = self.image_height - self._get_img_h(self.footer)
         logger.info("---------- footer ({x}, {y}) --------------".format(x=x, y=y))
         new_img.paste(self.footer, (x, y))
-
         return new_img
 
     def draw_image_output(self):
