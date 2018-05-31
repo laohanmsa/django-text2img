@@ -152,9 +152,9 @@ class RenderText(object):
             , "、", "%"]
         prefix = ["（", "(", "『", "「", "“", "‘", "《", "<"]
         line = ''
-        lines = [];
+        lines = []
         textArray = text.split(' ')
-        pattern = r'^[a-zA-Z\'‘’\"“”\.\,，]{2,}$'
+        pattern = r'^[a-zA-Z\'‘’\"“”\.\,，。!！?？;；』」）)>》、(（『「‘《<]{2,}$'
         for _text in textArray:
             if (re.match(pattern, _text)):
                 line += _text
@@ -164,7 +164,7 @@ class RenderText(object):
                 pass
             else:
                 for i in range(len(_text) + 1):
-                    line += _text[i - 1:i];
+                    line += _text[i - 1:i]
                     if font.getsize(line)[0] > width:
                         # 处理行尾字符是否是允许字符
                         if (_text[i - 1:i] in suffix):
@@ -250,6 +250,7 @@ class RenderText(object):
         # y = self.image_height - self._get_img_h(self.footer)
         logger.info("---------- footer ({x}, {y}) --------------".format(x=x, y=y))
         new_img.paste(self.footer, (x, y))
+        new_img.show()
         return new_img
 
     def draw_image_output(self):
