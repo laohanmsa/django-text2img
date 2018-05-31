@@ -250,7 +250,6 @@ class RenderText(object):
         # y = self.image_height - self._get_img_h(self.footer)
         logger.info("---------- footer ({x}, {y}) --------------".format(x=x, y=y))
         new_img.paste(self.footer, (x, y))
-        new_img.show()
         return new_img
 
     def draw_image_output(self):
