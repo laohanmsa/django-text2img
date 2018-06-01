@@ -5,9 +5,6 @@ from django.views.decorators.csrf import csrf_exempt
 from text2img.render_text import RenderText
 
 
-# Create your views here.
-
-
 class RenderTextView(View):
 
     def get(self, request, *args, **kwargs):
@@ -15,8 +12,13 @@ class RenderTextView(View):
 
     def post(self, request, *args, **kwargs):
         json_data = json.loads(request.body)
-        r = RenderText(**json_data)
-        return HttpResponse(content=r.draw_image_output(), content_type='image/jpeg')
+        if self.request.GET.get('type') == '24h':
+            r = RenderText(**json_data)
+            content = r.draw_24h_image_output()
+        else:
+            r = RenderText(**json_data)
+            content = r.draw_image_output()
+        return HttpResponse(content=content, content_type='image/jpeg')
 
     @csrf_exempt
     def dispatch(self, request, *args, **kwargs):

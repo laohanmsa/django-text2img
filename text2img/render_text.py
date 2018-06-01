@@ -61,9 +61,10 @@ class RenderText(object):
     def __init__(self, **kwargs):
         _timestamp = kwargs.pop('timestamp')
         assert _timestamp is not None, "need timestamp"
+        self.items = kwargs.pop('items', '')
 
-        self.title = kwargs.pop('title')
-        self.content = kwargs.pop('content')
+        self.title = kwargs.pop('title', '')
+        self.content = kwargs.pop('content', '')
         self.datetime = datetime.fromtimestamp(_timestamp)
         self.point = '快讯'
 
@@ -250,7 +251,125 @@ class RenderText(object):
         # y = self.image_height - self._get_img_h(self.footer)
         logger.info("---------- footer ({x}, {y}) --------------".format(x=x, y=y))
         new_img.paste(self.footer, (x, y))
+        new_img.show()
         return new_img
+
+    def draw_24h_image(self):
+        """
+        w : width
+        h : height
+        cal : calculate
+        pos : position
+        :return:
+        """
+        logger.info("------ Create new image. ------")
+        new_img = Image.new('RGB', (self.image_width, self.image_height), (255, 255, 255))
+        logger.info("------ New image is created (w, h). ------".format(w=self.image_width, h=self.image_height))
+
+        draw = ImageDraw.Draw(new_img)
+        new_img.paste(self.background, (0, 0))
+
+        # draw header
+        new_img.paste(self.header, (0, 0))
+        x, y = 585, 70
+        month_string = "- {:02d} -".format(self.datetime.month)
+        draw.text((x, y), month_string, font=self.fnt_month, fill=(255, 255, 255))
+
+        # cal day pos
+        w, h = self.fnt_month.getsize("{}".format(self.datetime.month))
+        x = 580
+        y += h - 12
+        day_string = "{:02d}".format(self.datetime.day)
+        draw.text((x, y), day_string, font=self.fnt_day, fill=(255, 255, 255))
+
+        # cal week pos
+        w, h = self.fnt_day.getsize(day_string)
+        y += h + 5
+        weekday_string = Weekday[self.datetime.weekday()]
+        draw.text((x, y), weekday_string, font=self.fnt_week, fill=(255, 255, 255))
+
+        # cal point pos
+        x = get_render_text_setting('content_margin')
+        header_h = self._get_img_h(self.header)
+        elh = get_render_text_setting('element_line_height')
+        y = header_h + elh
+        draw.text((x, y), self.point, font=self.fnt_point, fill=(0x00, 0x56, 0xff))
+
+        # cal title pos
+        fpmt = get_render_text_setting('font_point_margin_top')
+        w, h = self.fnt_point.getsize(self.point)
+        y += h + elh - fpmt
+
+        for row in self.title_lines:
+            draw.text((x, y), row, font=self.fnt_title, fill=(0x3b, 0x3b, 0x3b))
+            y += self.title_line_height
+
+        ftmt = get_render_text_setting('font_title_margin_top')
+        y += self.title_line_height - elh - ftmt
+        draw.text((x, y), self.date_string, font=self.fnt_date, fill=(0x87, 0x87, 0x87))
+
+        # # get a drawing context
+        #
+        # # 内容分行
+        TOTAL_WIDTH = 720  # 总宽度
+        CONTENT_MARGIN = int(TOTAL_WIDTH * 0.11)  # 内容区左右留白总宽度百分之11
+        CONTENT_WIDTH = TOTAL_WIDTH - CONTENT_MARGIN * 2  # 内容区宽度
+        LIST_HEIGHT = 30
+        CONTENT_LINE_HEIGHT = 10
+        HEADER_HEIGHT = 0  # 头部高度，等比例缩放时计算
+        FOOTER_HEIGHT = 0  # 脚高度，等比例缩放时计算
+        TITLE_HEIGHT = 0  # 标题部分的高度（包含快讯文字、标题文字、时间）
+        CONTENT_HEIGHT = 0  # 内容部分的高度
+        CIRCLE_WIDTH = 50
+        FNT_CONTENT = 28
+        FLOAT_RATE = 0.33  # 按字体大小浮动的上边距，字体大小乘以该浮动率等于该字体大小的上边距
+        FNT_CONTENT_MARGIN_TOP = int(FNT_CONTENT * FLOAT_RATE)
+        content_line_height = self.fnt_content.getsize(self.items[0])[1] + CONTENT_LINE_HEIGHT  # 设置行高
+        for index, item in enumerate(self.items):
+            _item = self._split_line(self.fnt_content, item, CONTENT_WIDTH - CIRCLE_WIDTH)
+            self.items[index] = _item
+            CONTENT_HEIGHT += len(_item) * content_line_height + LIST_HEIGHT
+
+        # 计算内容高度
+        CONTENT_HEIGHT -= LIST_HEIGHT + CONTENT_LINE_HEIGHT
+        # 计算总高度
+        TOTAL_HEIGHT = HEADER_HEIGHT + TITLE_HEIGHT + CONTENT_HEIGHT + FOOTER_HEIGHT + 3 * ELEMENT_LINE_HEIGHT - FNT_POINT_MARGIN_TOP - FNT_CONTENT_MARGIN_TOP
+        #
+        #
+        #
+        #
+        # # 画内容
+        r = 10
+        _x = x + 10
+        x += CIRCLE_WIDTH
+        circle = self.create_circle((r, r))
+        for item in self.items:
+            _y = y + FNT_CONTENT_MARGIN_TOP + round(
+                (content_line_height - FNT_CONTENT_MARGIN_TOP - CONTENT_LINE_HEIGHT - r) / 2)
+            new_img.paste(circle, (_x, _y))
+            for li in item:
+                # d.multiline_text(xy=(x,y),text=li,font=fnt, fill=(0x47,0x47,0x47),spacing=2)
+                draw.text((x, y), li, font=self.fnt_content, fill=(0x54, 0x54, 0x54))
+                y += content_line_height
+            y += LIST_HEIGHT
+        x = 0
+        y += elh - content_line_height - FNT_CONTENT_MARGIN_TOP - LIST_HEIGHT
+        new_img.show()
+        return new_img
+
+    def create_circle(size=(15, 15), color=(0x00, 0x56, 0xff)):
+        circle = Image.new('RGB', (1000, 1000), (255, 255, 255))
+        drw = ImageDraw.Draw(circle, 'RGB')
+        drw.ellipse((0, 0, 1000, 1000), fill=color, outline=color)
+        circle = _image_resize(circle)
+        return circle
+
+    def draw_24h_image_output(self):
+        _img = self.draw_24h_image()
+        _image_fp = BytesIO()
+        _img.save(_image_fp, format='JPEG', quality=100)
+        _img.close()
+        return _image_fp.getvalue()
 
     def draw_image_output(self):
         _img = self.draw_image()

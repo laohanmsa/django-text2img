@@ -19,3 +19,16 @@ class RenderTextTestCase(TestCase):
 
         res = self.client.post(_url, data=json.dumps(payload), content_type='application/json')
         self.assertEqual(res.status_code, 200)
+
+    def test_can_render_list_image(self):
+        _url = reverse('render_text', kwargs={'type': '24h'})
+        payload = {
+            'timestamp': 1526616756,
+            'title': '24',
+            'content': 'test',
+            'items': ['联合国用区块链技术为摩尔多瓦提供太阳能供电项目', '神秘组织发布区块链新共识协议', 'Openbazaar 2.20 版本发布，增加免费加密货币交易',
+                      '《华尔街日报》调查显示约 19% ICO 存在「误导甚至欺诈」', '嘉楠耘智港股融资计划发布', '嘉楠耘智港股融资计划发布',
+                      '纽约金融服务局授 Genesis Global Trading 许可证', '以太坊联盟 EEA 发布 CS 1.0 客户规范']
+        }
+        res = self.client.post(_url, data=json.dumps(payload), content_type='application/json')
+        self.assertEqual(res.status_code, 200)
