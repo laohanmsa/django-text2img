@@ -111,15 +111,10 @@ class RenderText(object):
     def list_image_height(self):
         header_h = self._get_img_h(self.header)
         footer_h = self._get_img_h(self.footer)
-        elh = get_render_text_setting('element_line_height') * 3
+        elh = get_render_text_setting('element_line_height')
         fpmt = get_render_text_setting('font_point_margin_top')
         fcmt = get_render_text_setting('font_content_margin_top')
-        _r = footer_h - fpmt + self._get_img_list_content_height() - fcmt + elh
-        print('header:{}'.format(header_h))
-        print('point:{}'.format(header_h + elh + fpmt))
-
-        print('content:{}'.format(header_h + elh + fpmt + elh + self._get_img_list_content_height()))
-        print('fotter:{}'.format(header_h + elh + fpmt + elh + self._get_img_list_content_height() + elh + footer_h))
+        _r = header_h + footer_h + fpmt + self._get_img_list_content_height() + fcmt + elh * 3
         return _r
 
     @property
@@ -191,10 +186,9 @@ class RenderText(object):
         return _ch
 
     def _get_img_list_content_height(self):
-        clh = get_render_text_setting('content_line_height')
         _ch = 0
         for item in self.items:
-            _ch += self.content_line_height * len(self.list_content_lines(item, 512)) - clh  # todo
+            _ch += self.content_line_height * len(self.list_content_lines(item, 512)) + 20
         logger.info("------- content {h} height ----------".format(h=_ch))
         return _ch
 
@@ -351,40 +345,27 @@ class RenderText(object):
         # # get a drawing context
 
         # # 内容分行
-        LIST_HEIGHT = 30
-        CONTENT_LINE_HEIGHT = 10
-        HEADER_HEIGHT = 0  # 头部高度，等比例缩放时计算
-        FOOTER_HEIGHT = 0  # 脚高度，等比例缩放时计算
-        TITLE_HEIGHT = 0  # 标题部分的高度（包含快讯文字、标题文字、时间）
-        CONTENT_HEIGHT = 0  # 内容部分的高度
-        CIRCLE_WIDTH = 50
-        FNT_CONTENT = 28
-        FLOAT_RATE = 0.33  # 按字体大小浮动的上边距，字体大小乘以该浮动率等于该字体大小的上边距
-        FNT_CONTENT_MARGIN_TOP = int(FNT_CONTENT * FLOAT_RATE)
-        CONTENT_LINE_HEIGHT = self.fnt_content.getsize(self.items[0])[1] + CONTENT_LINE_HEIGHT  # 设置行高
+        clh = get_render_text_setting('content_line_height')
+        cw = get_render_text_setting('circle_width')
+        fcmt = get_render_text_setting('font_content_margin_top')
+        content_line_height = self.fnt_content.getsize(self.items[0])[1] + clh  # 设置行高
+
         r = 10
         _x = x + 10
-        x += CIRCLE_WIDTH
+        x += cw
         circle = self.create_circle((r, r))
         w, h = self.fnt_point.getsize(self.point)
-        print('point_h:{}'.format(h))
         y += h + elh
         for item in self.items:
-            content_line_height = self.fnt_content.getsize(self.items[0])[1] + CONTENT_LINE_HEIGHT  # 设置行高
-            _y = y + FNT_CONTENT_MARGIN_TOP + round(
-                (content_line_height - FNT_CONTENT_MARGIN_TOP - CONTENT_LINE_HEIGHT - r) / 2)
+            _y = y + fcmt + round(
+                (content_line_height - fcmt - clh - r) / 2)
             new_img.paste(circle, (_x, _y))
-            for row in self.list_content_lines(item, self.content_width - CIRCLE_WIDTH):
+            for row in self.list_content_lines(item, 512):
                 draw.text((x, y), row, font=self.fnt_content, fill=(0x54, 0x54, 0x54))
                 y += self.content_line_height
-            # y += 10  # todo
-        print('content:{}'.format(y))
-
-        # cal footer pos
+            y += 20
         x = 0
-        clh = get_render_text_setting('content_line_height')
         y += elh - clh
-        print('footer:{}'.format(y))
         logger.info("---------- footer ({x}, {y}) --------------".format(x=x, y=y))
         new_img.paste(self.footer, (x, y))
         new_img.show()

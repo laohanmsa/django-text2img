@@ -12,6 +12,7 @@ TITLE_LINE_HEIGHT = 15  # 标题行高
 CONTENT_LINE_HEIGHT = 10  # 内容行高
 ELEMENT_LINE_HEIGHT = 40  # 元素之间高度
 FLOAT_RATE = 0.33  # 按字体大小浮动的上边距，字体大小乘以该浮动率等于该字体大小的上边距
+CIRCLE_SIZE = 50
 
 # 字体大小
 FNT_MONTH = 22
@@ -54,10 +55,10 @@ RENDER_TEXT_DEFAULTS = {
     'content_line_height': CONTENT_LINE_HEIGHT,
     'element_line_height': ELEMENT_LINE_HEIGHT,
     'float_rate': FLOAT_RATE,
+    'circle_width': CIRCLE_SIZE,
 }
 
 RENDER_TEXT = RENDER_TEXT_DEFAULTS.copy()
-
 
 RENDER_TEXT.update(getattr(settings, 'RENDER_TEXT', {}))
 

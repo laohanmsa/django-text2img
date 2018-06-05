@@ -28,10 +28,7 @@ class RenderTextTestCase(TestCase):
             'content': 'test',
             'items': [
                 '《华尔街日报》调查显示约 19% ICO 存在「误导甚至欺诈」', '嘉楠耘智港股融资计划发布', '嘉楠耘智港股融资计划发布',
-                '《华尔街日报》调查显示约 19% ICO 存在「误导甚至欺诈」', '嘉楠耘智港股融资计划发布', '嘉楠耘智港股融资计划发布',
-                '《华尔街日报》调查显示约 19% ICO 存在「误导甚至欺诈」', '嘉楠耘智港股融资计划发布', '嘉楠耘智港股融资计划发布',
-                '《华尔街日报》调查显示约 19% ICO 存在「误导甚至欺诈」', '嘉楠耘智港股融资计划发布', '嘉楠耘智港股融资计划发布',
-                '纽约金融服务局授 Genesis Global Trading 许可证', '以太坊联盟 EEA 发布 CS 1.0 客户规范']
+                '纽约金融服务局授 Genesis Global Trading 许可证', '以太坊联盟 EEA 发布 CS 1.0 客户规范', ]
         }
         res = self.client.post(_url, data=json.dumps(payload), content_type='application/json')
         self.assertEqual(res.status_code, 200)
