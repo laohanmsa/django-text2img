@@ -297,7 +297,6 @@ class RenderText(object):
         # y = self.image_height - self._get_img_h(self.footer)
         logger.info("---------- footer ({x}, {y}) --------------".format(x=x, y=y))
         new_img.paste(self.footer, (x, y))
-        new_img.show()
         return new_img
 
     def draw_24h_image(self):
@@ -368,7 +367,6 @@ class RenderText(object):
         y += elh - clh
         logger.info("---------- footer ({x}, {y}) --------------".format(x=x, y=y))
         new_img.paste(self.footer, (x, y))
-        new_img.show()
         return new_img
 
     def create_circle(self, size=(15, 15), color=(0x00, 0x56, 0xff)):
