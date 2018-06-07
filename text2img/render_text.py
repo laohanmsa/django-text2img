@@ -41,6 +41,14 @@ def _image_resize(img):
     return _img
 
 
+def _circle_image_resize(img, size=(1500, 1100)):
+    try:
+        img = img.resize(size, Image.ANTIALIAS)
+    except Exception:
+        pass
+    return img
+
+
 def _get_background():
     _background = Image.open(get_content(), mode='r')
     return _image_resize(_background)
@@ -61,11 +69,12 @@ class RenderText(object):
     def __init__(self, **kwargs):
         _timestamp = kwargs.pop('timestamp')
         assert _timestamp is not None, "need timestamp"
+        self.items = kwargs.pop('items', '')
 
-        self.title = kwargs.pop('title')
-        self.content = kwargs.pop('content')
+        self.title = kwargs.pop('title', '')
+        self.content = kwargs.pop('content', '')
         self.datetime = datetime.fromtimestamp(_timestamp)
-        self.point = '快讯'
+        self.point = kwargs.pop('point', '快讯')
 
         self.fnt_title = ImageFont.truetype(get_font_bold(), get_render_text_setting('font_title_size'))
         self.fnt_content = ImageFont.truetype(get_font_medium(), get_render_text_setting('font_content_size'))
@@ -99,8 +108,22 @@ class RenderText(object):
         return _r
 
     @property
+    def list_image_height(self):
+        header_h = self._get_img_h(self.header)
+        footer_h = self._get_img_h(self.footer)
+        elh = get_render_text_setting('element_line_height')
+        fpmt = get_render_text_setting('font_point_margin_top')
+        fcmt = get_render_text_setting('font_content_margin_top')
+        _r = header_h + footer_h + fpmt + self._get_img_list_content_height() + fcmt + elh * 3
+        return _r
+
+    @property
     def image_width(self):
         return get_render_text_setting('total_width')
+
+    @property
+    def font_content_margin_top(self):
+        return get_render_text_setting('font_content_margin_top')
 
     @property
     def date_string(self):
@@ -116,6 +139,10 @@ class RenderText(object):
         )
 
     @property
+    def content_width(self):
+        return get_render_text_setting('content_width')
+
+    @property
     def title_line_height(self):
         w, h = self.fnt_title.getsize(self.title)
         return h + get_render_text_setting('title_line_height')
@@ -126,6 +153,17 @@ class RenderText(object):
         return self._split_line(
             font=self.fnt_content,
             text=self.content,
+            width=_content_width,
+        )
+
+    def list_content_lines(self, item, content_width=None):
+        if not content_width:
+            _content_width = get_render_text_setting('content_width')
+        else:
+            _content_width = content_width
+        return self._split_line(
+            font=self.fnt_content,
+            text=item,
             width=_content_width,
         )
 
@@ -147,38 +185,47 @@ class RenderText(object):
         logger.info("------- content {h} height ----------".format(h=_ch))
         return _ch
 
+    def _get_img_list_content_height(self):
+        _ch = 0
+        for item in self.items:
+            _ch += self.content_line_height * len(self.list_content_lines(item, 512)) + 20
+        logger.info("------- content {h} height ----------".format(h=_ch))
+        return _ch
+
     def _split_line(self, font, text, width):
-        suffix = ["，", ",", "。", ".", "！", "!", "？", "?", "；", ";", "：", ":", "”", "’", "』", "」", "）", ")", "》", ">"
-            , "、", "%"]
+        suffix = ["，", ",", "。", ".", "！", "!", "？", "?", "；",
+                  ";", "：", ":", "”", "’", "』", "」", "）", ")",
+                  "》", ">", "、", "%"]
         prefix = ["（", "(", "『", "「", "“", "‘", "《", "<"]
         line = ''
-        lines = [];
-        textArray = text.split(' ')
-        pattern = r'^[a-zA-Z\'‘’\"“”\.\,，]{2,}$'
-        for _text in textArray:
-            if (re.match(pattern, _text)):
-                line += _text
-                if font.getsize(line)[0] > width:
-                    lines.append(line[:-len(_text)].strip())
-                    line = _text
-                pass
+        lines = []
+        i = 0
+        pattern = r'^[a-zA-Z\']{2,}'  # 单词正则
+        while i < len(text):
+            rs = re.match(pattern, text[i:])  # 判断当前游标下是否是一个单词起始位
+            char = rs.group() if rs else text[i:i + 1]  # 取字
+            if font.getsize(line + char)[0] > width:  # 如果行宽已经超过限制宽度时
+                # 处理行尾字符是否是行尾限制字符
+                if (char in suffix):
+                    if (line[-1] in suffix):  # 处理行尾双重行尾限制符
+                        lines.append(line[:-2].strip())
+                        line = line[-2] + char
+                    else:
+                        line += char
+                # 处理行尾字符是否是行首限定字符
+                elif (line[-1] in prefix):
+                    lines.append(line[:-1].strip())
+                    line = line[-1] + char
+                else:
+                    lines.append(line.strip())
+                    line = char
             else:
-                for i in range(len(_text) + 1):
-                    line += _text[i - 1:i];
-                    if font.getsize(line)[0] > width:
-                        # 处理行尾字符是否是允许字符
-                        if (_text[i - 1:i] in suffix):
-                            lines.append(line.strip())
-                            line = ''
-                        elif (text[i - 2:i - 1] in prefix):
-                            lines.append(line[:len(line) - 2].strip())
-                            line = line[len(line) - 2:]
-                        else:
-                            lines.append(line[:len(line) - 1].strip())
-                            line = line[len(line) - 1:]
-            line += ' '
-        if line.strip() != '':
-            lines.append(line.strip())
+                line += char
+            i += len(char)
+
+        if (len(line) > 0):  # 处理余行
+            lines.append(line)
+
         return lines
 
     # def _get_weekday_name(self, index):
@@ -251,6 +298,90 @@ class RenderText(object):
         logger.info("---------- footer ({x}, {y}) --------------".format(x=x, y=y))
         new_img.paste(self.footer, (x, y))
         return new_img
+
+    def draw_24h_image(self):
+        """
+        w : width
+        h : height
+        cal : calculate
+        pos : position
+        :return:
+        """
+        logger.info("------ Create new image. ------")
+        new_img = Image.new('RGB', (self.image_width, self.list_image_height), (255, 255, 255))
+        logger.info("------ New image is created (w, h). ------".format(w=self.image_width, h=self.image_height))
+
+        draw = ImageDraw.Draw(new_img)
+        new_img.paste(self.background, (0, 0))
+
+        # draw header
+        new_img.paste(self.header, (0, 0))
+        x, y = 585, 70
+        month_string = "- {:02d} -".format(self.datetime.month)
+        draw.text((x, y), month_string, font=self.fnt_month, fill=(255, 255, 255))
+        print('header:{}'.format(y))
+
+        # cal day pos
+        w, h = self.fnt_month.getsize("{}".format(self.datetime.month))
+        x = 580
+        y += h - 12
+        day_string = "{:02d}".format(self.datetime.day)
+        draw.text((x, y), day_string, font=self.fnt_day, fill=(255, 255, 255))
+
+        # cal week pos
+        w, h = self.fnt_day.getsize(day_string)
+        y += h + 5
+        weekday_string = Weekday[self.datetime.weekday()]
+        draw.text((x, y), weekday_string, font=self.fnt_week, fill=(255, 255, 255))
+
+        # cal point pos
+        x = get_render_text_setting('content_margin')
+        header_h = self._get_img_h(self.header)
+        elh = get_render_text_setting('element_line_height')
+        y = header_h + elh
+        draw.text((x, y), self.point, font=self.fnt_point, fill=(0x00, 0x56, 0xff))
+
+        # # get a drawing context
+
+        # # 内容分行
+        clh = get_render_text_setting('content_line_height')
+        cw = get_render_text_setting('circle_width')
+        fcmt = get_render_text_setting('font_content_margin_top')
+        content_line_height = self.fnt_content.getsize(self.items[0])[1] + clh  # 设置行高
+
+        r = 10
+        _x = x + 10
+        x += cw
+        circle = self.create_circle((r, r))
+        w, h = self.fnt_point.getsize(self.point)
+        y += h + elh
+        for item in self.items:
+            _y = y + fcmt + round(
+                (content_line_height - fcmt - clh - r) / 2)
+            new_img.paste(circle, (_x, _y))
+            for row in self.list_content_lines(item, 512):
+                draw.text((x, y), row, font=self.fnt_content, fill=(0x54, 0x54, 0x54))
+                y += self.content_line_height
+            y += 20
+        x = 0
+        y += elh - clh
+        logger.info("---------- footer ({x}, {y}) --------------".format(x=x, y=y))
+        new_img.paste(self.footer, (x, y))
+        return new_img
+
+    def create_circle(self, size=(15, 15), color=(0x00, 0x56, 0xff)):
+        circle = Image.new('RGB', (1000, 1000), (255, 255, 255))
+        drw = ImageDraw.Draw(circle, 'RGB')
+        drw.ellipse((0, 0, 1000, 1000), fill=color, outline=color)
+        circle = _circle_image_resize(circle, size=size)
+        return circle
+
+    def draw_24h_image_output(self):
+        _img = self.draw_24h_image()
+        _image_fp = BytesIO()
+        _img.save(_image_fp, format='JPEG', quality=100)
+        _img.close()
+        return _image_fp.getvalue()
 
     def draw_image_output(self):
         _img = self.draw_image()
