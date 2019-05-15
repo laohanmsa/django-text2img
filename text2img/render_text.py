@@ -200,7 +200,7 @@ class RenderText(object):
         line = ''
         lines = []
         i = 0
-        pattern = r'^[a-zA-Z\']{2,}'  # 单词正则
+        pattern = r'^[(a-zA-Z\')|($¥0-9\.,%)]{2,}'  # 单词正则
         while i < len(text):
             rs = re.match(pattern, text[i:])  # 判断当前游标下是否是一个单词起始位
             char = rs.group() if rs else text[i:i + 1]  # 取字
